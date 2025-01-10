@@ -1,32 +1,49 @@
-export function createCard(name, link) {
-  const cardTemplate = document.querySelector('#card-template').content;
-  const cardElement = cardTemplate.cloneNode(true);
+function addCard(
+	myId,
+	card,
+	cardTemplate,
+	openImgModal,
+	openModalDeleteCard,
+	handleLike
+) {
+	const cardElement = cardTemplate
+		.querySelector('.places__item')
+		.cloneNode(true)
 
-  const cardImage = cardElement.querySelector('.card__image');
-  const cardTitle = cardElement.querySelector('.card__title');
-  const likeButton = cardElement.querySelector('.card__like-button');
+	const cardImage = cardElement.querySelector('.card__image')
+	cardImage.src = card.link
+	cardImage.alt = card.name
+	cardElement.querySelector('.card__title').textContent = card.name
 
-  cardImage.src = link;
-  cardImage.alt = name;
-  cardTitle.textContent = name;
+	cardImage.addEventListener('click', evt => {
+		evt.stopPropagation()
+		openImgModal(cardImage)
+	})
 
-  likeButton.addEventListener('click', () =>
-    likeButton.classList.toggle('card__like-button_active')
-  );
+	const deleteButton = cardElement.querySelector('.card__delete-button')
 
-  cardImage.addEventListener('click', () => handleCardClick(link, name));
+	if (card.owner._id === myId) {
+		deleteButton.addEventListener('click', evt => {
+			evt.stopPropagation()
+			openModalDeleteCard(card, cardElement)
+		})
+	} else {
+		deleteButton.remove()
+	}
 
-  return cardElement;
+	const countLikes = arrLikes => {
+		const likeCounter = cardElement.querySelector('.card__like-counter')
+		likeCounter.textContent = arrLikes.length
+	}
+
+	const likeButton = cardElement.querySelector('.card__like-button')
+	likeButton.addEventListener('click', evt => {
+		handleLike(evt.target, card._id, countLikes)
+	})
+
+	countLikes(card.likes)
+
+	return cardElement
 }
 
-export function handleCardClick(link, name) {
-  const popupImage = document.querySelector('.popup__image');
-  const popupCaption = document.querySelector('.popup__caption');
-  const imageModal = document.querySelector('#image-modal');
-
-  popupImage.src = link;
-  popupImage.alt = name;
-  popupCaption.textContent = name;
-
-  openModal(imageModal);
-}
+export { addCard }

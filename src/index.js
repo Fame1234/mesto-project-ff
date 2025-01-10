@@ -1,46 +1,200 @@
-import { openModal, closeModal } from './components/modal.js';
-import { createCard } from './components/card.js';
-import './pages/index.css'; 
+import { addCard } from './components/card'
+import { closeModal, openModal } from './components/modal'
+import './pages/index.css'
 
-const profileEditButton = document.querySelector('.profile__edit-button');
-const profileModal = document.querySelector('#profile-modal');
-const addCardModal = document.querySelector('#add-card-modal');
-const profileName = document.querySelector('.profile__name');
-const profileJob = document.querySelector('.profile__job');
-const profileForm = document.querySelector('#profile-form');
-const nameInput = profileForm.querySelector('#name-input');
-const jobInput = profileForm.querySelector('#job-input');
-const addCardForm = document.querySelector('#add-card-form');
-const cardContainer = document.querySelector('.cards__container');
+profileImage.addEventListener('click', evt => {
+	evt.stopPropagation()
+	clearValidation(formAvatar, validationConfig)
+	openModal(avatarPopup)
+})
+formAvatar.addEventListener('submit', handleFormAvatarSubmit)
 
-// Открытие и закрытие попапов
-profileEditButton.addEventListener('click', () => openModal(profileModal));
-profileModal.addEventListener('click', (evt) => {
-  if (evt.target.classList.contains('modal')) {
-    closeModal(profileModal);
-  }
-});
+function handleFormAvatarSubmit(evt) {
+	evt.preventDefault()
+	const button = evt.target.querySelector('.popup__button')
+  renderLoading(true, button)
 
-addCardForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
-  const name = addCardForm.querySelector('#card-name-input').value;
-  const link = addCardForm.querySelector('#card-link-input').value;
+	const avatarLink = {
+		avatar: avatarInput.value,
+	}
 
-  const card = createCard(name, link);
-  cardContainer.prepend(card);
-  closeModal(addCardModal);
-});
+	editAvatar(avatarLink)
+		.then(data => {
+			renderAvatar(data)
+			closeModal(avatarPopup)
+		})
+		.catch(err => console.log(err))
+		.finally(() => renderLoading(false, button))
+}
 
-addCardModal.addEventListener('click', (evt) => {
-  if (evt.target.classList.contains('modal')) {
-    closeModal(addCardModal);
-  }
-});
+// загружаем аватар на основе данных с  сервера
+function renderAvatar(data) {
+	profileImage.style.backgroundImage = `url(${data.avatar})`
+}
 
-// Обработчик для редактирования профиля
-profileForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
-  profileName.textContent = nameInput.value;
-  profileJob.textContent = jobInput.value;
-  closeModal(profileModal);
-});
+// <---------------------------------------------------->
+
+// переменные для формы редактирования профиля
+const editPopup = document.querySelector('.popup_type_edit')
+const editButton = document.querySelector('.profile__edit-button')
+const profileTitle = document.querySelector('.profile__title')
+const profileDescription = document.querySelector('.profile__description')
+
+const formEditProfile = document.querySelector('form[name="edit-profile"]')
+const nameInput = formEditProfile.querySelector('.popup__input_type_name')
+const jobInput = formEditProfile.querySelector('.popup__input_type_description')
+
+editButton.addEventListener('click', openModalEditProfile)
+formEditProfile.addEventListener('submit', handleFormEditSubmit)
+
+function openModalEditProfile() {
+	nameInput.value = profileTitle.textContent
+	jobInput.value = profileDescription.textContent
+	clearValidation(formEditProfile, validationConfig)
+	openModal(editPopup)
+}
+
+function handleFormEditSubmit(evt) {
+	evt.preventDefault()
+	const button = evt.target.querySelector('.popup__button')
+  renderLoading(true, button)
+
+	const updateProfileData = {
+		name: nameInput.value,
+		about: jobInput.value,
+	}
+	editedUserData(updateProfileData)
+		.then(userData => {
+			renderUserData(userData)
+			closeModal(editPopup)
+		})
+		.catch(err => console.log(err))
+		.finally(() => renderLoading(false, button))
+}
+
+const addCardPopup = document.querySelector('.popup_type_new-card')
+const addButton = document.querySelector('.profile__add-button')
+
+const formNewPlace = document.querySelector('form[name="new-place"]')
+const namePlaceInput = formNewPlace.querySelector(
+	'.popup__input_type_card-name'
+)
+const linkInput = formNewPlace.querySelector('.popup__input_type_url')
+
+// слушатель кнопки открытия попапа для добавления новой карточки
+addButton.addEventListener('click', evt => {
+	evt.stopPropagation()
+	clearValidation(formNewPlace, validationConfig)
+	openModal(addCardPopup)
+})
+
+formNewPlace.addEventListener('submit', evt => {
+	evt.stopPropagation()
+	handleNewCardSubmit(evt)
+	document.querySelector('.popup__button').disabled = true
+	clearValidation(formNewPlace, validationConfig)
+})
+
+// функция добавления новой карточки в начало страницы
+function handleNewCardSubmit(evt) {
+	evt.preventDefault()
+	const button = evt.target.querySelector('.popup__button')
+  renderLoading(true, button)
+
+	const namePlaceValue = namePlaceInput.value
+	const linkValue = linkInput.value
+
+	const newCardData = {
+		name: namePlaceValue,
+		link: linkValue,
+	}
+	addNewCard(newCardData)
+		.then(data => {
+			cardList.prepend(
+				addCard(
+					myId,
+					data,
+					cardTemplate,
+					openImgModal,
+					openModalDeleteCard,
+					handleLike
+				)
+			)
+			closeModal(addCardPopup)
+			formNewPlace.reset()
+		})
+		.catch(err => {
+			console.log(err)
+		})
+		.finally(() => renderLoading(false, button))
+}
+
+// <----------------------------------------------------------->
+
+// переменные для открытия попапа с картинкой
+const modalTypeImg = document.querySelector('.popup_type_image')
+const modalImg = modalTypeImg.querySelector('.popup__image')
+const modalCaption = modalTypeImg.querySelector('.popup__caption')
+
+// функция открытия модального окна изображения карточки
+function openImgModal(img) {
+	modalImg.src = img.src
+	modalImg.alt = img.alt
+	modalCaption.textContent = img.alt
+	openModal(modalTypeImg)
+}
+
+// <---------------------------------------------------------->
+
+// переменные для попапа удаления карточки по корзине
+const deleteCardPopup = document.querySelector('.popup_type_delete-card')
+let cardDelete
+let cardElementDelete
+const deleteCardButton = document.querySelector('.popup__button_delete-card')
+
+// функция открытия попапа для удаления карточки
+function openModalDeleteCard(card, cardElement) {
+	cardDelete = card
+	cardElementDelete = cardElement
+	openModal(deleteCardPopup)
+}
+
+// функция обработчик удаления карточки
+function handleDeleteCard(evt, card, cardElement) {
+	evt.preventDefault()
+	deleteCard(card)
+		.then(() => cardElement.remove())
+		.catch(err => console.log(err))
+}
+
+// удаление карточки по кнопке согласия "да"
+deleteCardButton.addEventListener('click', evt => {
+	evt.stopPropagation()
+	handleDeleteCard(evt, cardDelete, cardElementDelete)
+	closeModal(deleteCardPopup)
+})
+
+// функция для постановки и снятия лайка
+function handleLike(button, cardId, countLikes) {
+	const likeMethod = button.classList.contains('card__like-button_is-active')
+		? deleteLikeCard
+		: likeCard
+	likeMethod(cardId)
+		.then(cardData => {
+			countLikes(cardData.likes)
+			button.classList.toggle('card__like-button_is-active')
+		})
+		.catch(err => console.log(err))
+}
+
+// <--------------------------------------------------->
+// ЗАКРЫТИЕ ПОПАПОВ ПО КРЕСТИКУ
+// все кнопки закрытия попапов
+const closeButtons = document.querySelectorAll('.popup__close')
+
+closeButtons.forEach(button => {
+	button.addEventListener('click', evt => {
+		const popup = evt.target.closest('.popup')
+		closeModal(popup)
+	})
+})
