@@ -2,38 +2,6 @@ import { addCard } from './components/card'
 import { closeModal, openModal } from './components/modal'
 import './pages/index.css'
 
-profileImage.addEventListener('click', evt => {
-	evt.stopPropagation()
-	clearValidation(formAvatar, validationConfig)
-	openModal(avatarPopup)
-})
-formAvatar.addEventListener('submit', handleFormAvatarSubmit)
-
-function handleFormAvatarSubmit(evt) {
-	evt.preventDefault()
-	const button = evt.target.querySelector('.popup__button')
-  renderLoading(true, button)
-
-	const avatarLink = {
-		avatar: avatarInput.value,
-	}
-
-	editAvatar(avatarLink)
-		.then(data => {
-			renderAvatar(data)
-			closeModal(avatarPopup)
-		})
-		.catch(err => console.log(err))
-		.finally(() => renderLoading(false, button))
-}
-
-// загружаем аватар на основе данных с  сервера
-function renderAvatar(data) {
-	profileImage.style.backgroundImage = `url(${data.avatar})`
-}
-
-// <---------------------------------------------------->
-
 // переменные для формы редактирования профиля
 const editPopup = document.querySelector('.popup_type_edit')
 const editButton = document.querySelector('.profile__edit-button')
