@@ -1,5 +1,6 @@
 import { openModal, closeModal } from './components/modal.js';
 import { createCard } from './components/card.js';
+import './pages/index.css'; 
 
 const profileEditButton = document.querySelector('.profile__edit-button');
 const profileModal = document.querySelector('#profile-modal');
